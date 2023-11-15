@@ -118,11 +118,9 @@ export default {
             }, 1000);
         },
         playSoundAndSetGlow(input) {
-            console.log(input)
-
-            this.$refs[input].currentTime = 0;
             this.$refs[input].play()
             this.soundSectors[input] = true
+            this.$refs[input].currentTime = 0
 
             setTimeout(this.clearGlow, 300)
         },
@@ -159,7 +157,6 @@ export default {
             this.playingSeries = true;
 
             const inputDelay = this.delayMap[this.level] || this.delayMap.easy;
-
             let serieDelay = 500;
 
             const playSoundAndSetGlow = (input) => {
