@@ -1,9 +1,9 @@
 <template>
     <div class="simon-component">
-        <audio ref="sound1" src="../assets/sounds/1.mp3"></audio>
-        <audio ref="sound2" src="../assets/sounds/2.mp3"></audio>
-        <audio ref="sound3" src="../assets/sounds/3.mp3"></audio>
-        <audio ref="sound4" src="../assets/sounds/4.mp3"></audio>
+        <audio ref="green" src="../assets/sounds/1.mp3"></audio>
+        <audio ref="red" src="../assets/sounds/2.mp3"></audio>
+        <audio ref="yellow" src="../assets/sounds/3.mp3"></audio>
+        <audio ref="blue" src="../assets/sounds/4.mp3"></audio>
 
         <h1>Simons The Game</h1>
 
@@ -13,10 +13,10 @@
             </div>
 
             <div class="simon__board">
-                <div class="board__btn green" :class="{ glow: activeGreen }" @click="setInput(1)" />
-                <div class="board__btn red" :class="{ glow: activeRed }" @click="setInput(2)" />
-                <div class="board__btn yellow" :class="{ glow: activeYellow }" @click="setInput(3)" />
-                <div class="board__btn blue" :class="{ glow: activeBlue }" @click="setInput(4)" />
+                <div class="board__btn green" :class="{ glow: soundSectors['green'] }" @click="setInput('green')" />
+                <div class="board__btn red" :class="{ glow: soundSectors['red'] }" @click="setInput('red')" />
+                <div class="board__btn yellow" :class="{ glow: soundSectors['yellow'] }" @click="setInput('yellow')" />
+                <div class="board__btn blue" :class="{ glow: soundSectors['blue'] }" @click="setInput('blue')" />
             </div>
         </div>
 
@@ -27,12 +27,20 @@
 
         <div class="level">
             <p>Сложность</p>
-            <input type="radio" value="easy" v-model="level" />
-            <label for="easy">Легкий</label>
-            <input type="radio" value="normal" v-model="level" />
-            <label for="normal">Средний</label>
-            <input type="radio" value="hard" v-model="level" />
-            <label for="hard">Сложный</label>
+            <div class="level__input-wrapper">
+                <div>
+                    <input type="radio" value="easy" v-model="level" />
+                    <label for="easy">Легкий</label>
+                </div>
+                <div>
+                    <input type="radio" value="normal" v-model="level" />
+                    <label for="normal">Средний</label>
+                </div>
+                <div>
+                    <input type="radio" value="hard" v-model="level" />
+                    <label for="hard">Сложный</label>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -51,10 +59,12 @@ export default {
     },
     data() {
         return {
-            activeGreen: false,
-            activeRed: false,
-            activeYellow: false,
-            activeBlue: false,
+            soundSectors: { green: false, red: false, yellow: false, blue: false },
+            delayMap: {
+                easy: 1500,
+                normal: 100,
+                hard: 400
+            },
 
             level: "easy",
             started: false,
@@ -74,65 +84,57 @@ export default {
             this.playSoundAndSetGlow(input);
             this.userInput.push(input);
 
-            // compare user input to correct input
-            if (this.userInput[this.userInput.length - 1] !== this.series[this.userInput.length - 1]) {
-                this.userInput = [];
-                this.allowInput = false;
-                this.showError = true;
-                // if wrong, end the game
-                setTimeout(this.reset, 2000);
+            const lastUserInput = this.userInput[this.userInput.length - 1];
+            const lastSeriesInput = this.series[this.userInput.length - 1];
+
+            // Проверка правильности ввода
+            if (lastUserInput !== lastSeriesInput) {
+                this.resetGameOnError();
                 return;
             }
 
-            // last user input in serie
-            if (this.userInput.length == this.series.length) {
-                this.allowInput = false
-                this.userInput = []
-
-                setTimeout(() => {
-                    this.addRound()
-                    this.playSeries()
-                }, 1000);
+            // Последний ввод пользователя в серии
+            if (this.userInput.length === this.series.length) {
+                this.completeRound();
             }
+        },
+
+        resetGameOnError() {
+            this.userInput = [];
+            this.allowInput = false;
+            this.showError = true;
+
+            // Если ошибочный ввод, завершаем игру
+            setTimeout(this.reset, 2000);
+        },
+
+        completeRound() {
+            this.allowInput = false;
+            this.userInput = [];
+
+            setTimeout(() => {
+                this.addRound();
+                this.playSeries();
+            }, 1000);
         },
         playSoundAndSetGlow(input) {
-            switch (input) {
-                case 1:
-                    this.$refs.sound1.play();
-                    this.$refs.sound1.currentTime = 0;
-                    this.activeGreen = true;
-                    break;
-                case 2:
-                    this.$refs.sound2.play();
-                    this.$refs.sound1.currentTime = 0;
-                    this.activeRed = true;
-                    break;
-                case 3:
-                    this.$refs.sound3.play();
-                    this.$refs.sound1.currentTime = 0;
-                    this.activeYellow = true;
-                    break;
-                case 4:
-                    this.$refs.sound4.play();
-                    this.$refs.sound1.currentTime = 0;
-                    this.activeBlue = true;
-                    break;
-            }
-            setTimeout(this.clearGlow, 300);
+            console.log(input)
+
+            this.$refs[input].currentTime = 0;
+            this.$refs[input].play()
+            this.soundSectors[input] = true
+
+            setTimeout(this.clearGlow, 300)
         },
         clearGlow() {
-            this.activeGreen = false;
-            this.activeRed = false;
-            this.activeYellow = false;
-            this.activeBlue = false;
+            Object.keys(this.soundSectors).forEach(key => {
+                this.soundSectors[key] = false;
+            })
         },
         reset() {
-            this.activeRed = false,
-                this.activeGreen = false,
-                this.activeYellow = false,
-                this.activeBlue = false,
+            this.clearGlow()
 
-                this.started = false,
+            this.started = false,
                 this.roundsCount = 0,
                 this.series = [],
                 this.playingSeries = false,
@@ -155,43 +157,38 @@ export default {
         playSeries() {
             this.allowInput = false; // input is restricted
             this.playingSeries = true;
-            let serieDelay = 500;
-            let inputDelay = 1500;
 
-            switch (this.level) {
-                case "easy":
-                    inputDelay = 1500;
-                    break;
-                case "normal":
-                    inputDelay = 1000;
-                    break;
-                case "hard":
-                    inputDelay = 400;
-                    break;
-            }
+            const inputDelay = this.delayMap[this.level] || this.delayMap.easy;
+
+            let serieDelay = 500;
+
+            const playSoundAndSetGlow = (input) => {
+                setTimeout(() => {
+                    if (this.started) {
+                        this.playSoundAndSetGlow(input);
+                        this.playingSeries = false;
+                        this.allowInput = true;
+                    }
+                }, serieDelay);
+            };
 
             this.series.forEach((input, index, array) => {
-                if (index == array.length - 1) {
-                    setTimeout(() => {
-                        if (this.started) {
-                            this.playSoundAndSetGlow(input);
-                            this.playingSeries = false;
-                            this.allowInput = true;
-                        }
-                    }, serieDelay);
-                }
+                setTimeout(() => {
+                    this.playSoundAndSetGlow(input);
+                }, serieDelay);
 
-                else
-                    setTimeout(() => {
-                        this.playSoundAndSetGlow(input);
-                    }, serieDelay);
+                if (index === array.length - 1) {
+                    playSoundAndSetGlow(input);
+                }
 
                 serieDelay += inputDelay;
             });
-            this.playingSeries = false;
         },
+
         randomInput() {
-            return Math.floor(Math.random() * 4) + 1
+            const colorKeys = Object.keys(this.soundSectors)
+            const randomIndex = Math.floor(Math.random() * colorKeys.length)
+            return colorKeys[randomIndex]
         },
     }
 }
@@ -263,10 +260,8 @@ export default {
     width: 100px;
     padding: 8px;
     transition: background-color 0.1s linear;
-}
-
-.btn {
-    transition: all 0.1s linear;
+    background-color: transparent;
+    font-size: 14px;
 }
 
 .green-btn:hover {
@@ -289,6 +284,12 @@ input[type="radio"] {
 
 input[type="radio"]+label {
     cursor: pointer;
+}
+
+.level__input-wrapper {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
 }
 </style>
   

@@ -1,4 +1,5 @@
 # simon-the-game
+https://blchnk.github.io/Simons-The-Game/
 
 ## Project setup
 ```
