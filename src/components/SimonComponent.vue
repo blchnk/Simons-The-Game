@@ -62,7 +62,7 @@ export default {
             soundSectors: { green: false, red: false, yellow: false, blue: false },
             delayMap: {
                 easy: 1500,
-                normal: 100,
+                normal: 1000,
                 hard: 400
             },
 
